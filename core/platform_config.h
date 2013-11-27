@@ -2,14 +2,8 @@
 #ifndef _PLATFORM_CINFIG_H_
 #define  _PLATFORM_CINFIG_H_
 
-//Èç¹ûÊÇnodejs»·¾³Çë¼ÓÉÏ
+//å¦‚æžœæ˜¯nodejsçŽ¯å¢ƒè¯·åŠ ä¸Š
 #define NODEJS
-
-
-
-#include "../third_party/CodingConv/encodeutil.h"
-
-
 
 #include <vector>
 #include <map>
@@ -20,8 +14,10 @@
 #include<cstdlib>
 #include<iostream>
 #include<sstream>
+#include <exception>
 using namespace std;
 #include "otlv4.h"
+#include "../third_party/CodingConv/encodeutil.h"
 
 
 #if defined (__unix) || defined (__linux__) || defined(__QNX__) || defined (_AIX)

@@ -9,15 +9,16 @@
 #include <string>
 #include <exception>
 #include <ctime>
+class otl_connect;
 
 /************************************************************************/
-/* OTLÁ¬½Ó³Øµ¥ÀıÄ£Ê½												    */
+/* OTLè¿æ¥æ± å•ä¾‹æ¨¡å¼												    */
 /************************************************************************/
-typedef std::map<otl_connect*, int >otl_con_list; //Á¬½ÓÁ´±í
-#define  DEFAULT_CON_COUNT 2   //È±Ê¡µÄÁ¬½Ó¸öÊı
-#define  REFRESH_INTER_MINUTE		1   //Ã¿¸ôREFRESH_INTER·ÖÖÓË¢ĞÂÁ¬½Ó³ØµÄÁ¬½Ó·ÀÖ¹ºÍÊı¾İ¿â¶Ïµô
+typedef std::map<otl_connect*, int >otl_con_list; //è¿æ¥é“¾è¡¨
+#define  DEFAULT_CON_COUNT 2   //ç¼ºçœçš„è¿æ¥ä¸ªæ•°
+#define  REFRESH_INTER_MINUTE		1   //æ¯éš”REFRESH_INTERåˆ†é’Ÿåˆ·æ–°è¿æ¥æ± çš„è¿æ¥é˜²æ­¢å’Œæ•°æ®åº“æ–­æ‰
 #define  REFRESH_INTER_SENCOND  (2 * REFRESH_INTER_MINUTE)
-#define  PRINT_POOL_TIME			10	//Ã¿¸ôÒ»¶ÎÊ±¼ä´òÓ¡Á¬½Ó³ØµÄÊ¹ÓÃÇé¿ö
+#define  PRINT_POOL_TIME			10	//æ¯éš”ä¸€æ®µæ—¶é—´æ‰“å°è¿æ¥æ± çš„ä½¿ç”¨æƒ…å†µ
 
 class otlPool
 {
@@ -36,13 +37,13 @@ private:
 	void otl_unlock();
 	int otl_malloc_conn();
 	bool otl_check_conn(otl_connect* pconn);
-	static void otl_refresh_pool(void * arg); //Ïß³Ì´¦Àíº¯ÊıË¢ĞÂÁ¬½Ó³Ø
-	static void otl_thread_fun(void* arg);//Ïß³Ìº¯Êı
+	static void otl_refresh_pool(void * arg); //çº¿ç¨‹å¤„ç†å‡½æ•°åˆ·æ–°è¿æ¥æ± 
+	static void otl_thread_fun(void* arg);//çº¿ç¨‹å‡½æ•°
 
 private:
-	unsigned int max_con_count; //×î´óÁ¬½Ó¸öÊı
-	unsigned int min_con_count; //×îĞ¡Á¬½Ó¸öÊı
-	static unsigned int total_con_cout;	//×Ü¹²´´½¨µÄÁ¬½Ó¸öÊı
+	unsigned int max_con_count; //æœ€å¤§è¿æ¥ä¸ªæ•°
+	unsigned int min_con_count; //æœ€å°è¿æ¥ä¸ªæ•°
+	static unsigned int total_con_cout;	//æ€»å…±åˆ›å»ºçš„è¿æ¥ä¸ªæ•°
 	otl_con_list* p_con_list;
 	static otlPool* p_conn_pool;
 	std::string user_name;
@@ -50,7 +51,7 @@ private:
 	std::string tns;
 	std::string conn_str;
 	un_mutex_t mutex;
-	bool b_startup;//ÊÇ·ñÆô¶¯
+	bool b_startup;//æ˜¯å¦å¯åŠ¨
 
 
 };

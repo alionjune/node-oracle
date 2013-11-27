@@ -1,7 +1,6 @@
 
 #include "otlPool.h"
-#include <pthread.h>
-#pragma comment(lib,"pthreadVC2.lib")
+
 
 
 #include <iostream>
@@ -22,7 +21,7 @@ otlPool::otlPool(void)
 	max_con_count = 3;
 	min_con_count = 2;
 	b_startup = false;
-	otl_connect::otl_initialize(1); //Ïß³ÌÄ£ĞÍ
+	otl_connect::otl_initialize(1); //çº¿ç¨‹æ¨¡å‹
 
 }
 
@@ -31,9 +30,9 @@ otlPool::~otlPool(void)
 {
 	otl_destroy();
 	/*
-	*ÓÃÓÚÖĞÖ¹ORACLE OCI£¸¡¢£¹µÄÊı¾İ¿â»·¾³¡£ËüĞèÒªÔÚ³ÌĞò×îºóÁ¬½ÓÊı¾İ¿âÁ¬½Óºó±»Ö´ĞĞÒ»´Î¡£
-	¸Ãº¯Êı½öÊÇ¶ÔOCITerminate()º¯ÊıµÄÒ»¸ö¼òµ¥·â×°¡£ÔÚ¶àÏß³Ì»·¾³ÀïÃæ£¬
-	ÎªÁËÄÜ¹»°ÑÖ÷Ïß³Ì´ÓÊı¾İ¿â¶Ï¿ª£¬¸Ãº¯Êı±ØĞë±»µ÷ÓÃ£¬ÒòÎªËü»áÊÍ·ÅÒ»Ğ©¿Í»§¶Ë²¢ÇÒ´¦ÀíÆäËûµÄÒ»Ğ©ÊÂÇé¡£
+	*ç”¨äºä¸­æ­¢ORACLE OCIï¼˜ã€ï¼™çš„æ•°æ®åº“ç¯å¢ƒã€‚å®ƒéœ€è¦åœ¨ç¨‹åºæœ€åè¿æ¥æ•°æ®åº“è¿æ¥åè¢«æ‰§è¡Œä¸€æ¬¡ã€‚
+	è¯¥å‡½æ•°ä»…æ˜¯å¯¹OCITerminate()å‡½æ•°çš„ä¸€ä¸ªç®€å•å°è£…ã€‚åœ¨å¤šçº¿ç¨‹ç¯å¢ƒé‡Œé¢ï¼Œ
+	ä¸ºäº†èƒ½å¤ŸæŠŠä¸»çº¿ç¨‹ä»æ•°æ®åº“æ–­å¼€ï¼Œè¯¥å‡½æ•°å¿…é¡»è¢«è°ƒç”¨ï¼Œå› ä¸ºå®ƒä¼šé‡Šæ”¾ä¸€äº›å®¢æˆ·ç«¯å¹¶ä¸”å¤„ç†å…¶ä»–çš„ä¸€äº›äº‹æƒ…ã€‚
 	*/
 	otl_connect::otl_terminate();
 	un_mutex_destroy(&mutex);
@@ -50,7 +49,7 @@ int otlPool::init_pool(std::string user_name,std::string pwd,std::string tns,uns
 	try
 	{
 
-		//³õÊ¼»¯»¥³âÁ¿
+		//åˆå§‹åŒ–äº’æ–¥é‡
 		if(0!=un_mutex_init(&mutex))
 			abort();
 
@@ -59,7 +58,7 @@ int otlPool::init_pool(std::string user_name,std::string pwd,std::string tns,uns
 			printf("%s\n","otlPool Init Error");
 			abort();
 		}
-		//Æô¶¯Á¬½Ó³ØÎ¬»¤Ïß³Ì
+		//å¯åŠ¨è¿æ¥æ± ç»´æŠ¤çº¿ç¨‹
 		un_thread_t localThreadId;
 		if(0!=un_thread_create(&localThreadId,otl_thread_fun,this))
 			abort();
@@ -78,10 +77,12 @@ int otlPool::init_pool(std::string user_name,std::string pwd,std::string tns,uns
 	catch (otl_exception& e )
 	{
 		cout<<__FILE__<<":"<<"LINE:"<<__LINE__<<" error:"<<e.msg<<endl;;
+		return -1;
 	}
 	catch (std::exception&e)
 	{
-		cout<<__FILE__<<":"<<"LINE:"<<__LINE__<<" error:"<<e.what()<<endl;;
+		cout<<__FILE__<<":"<<"LINE:"<<__LINE__<<" error:"<<e.what()<<endl;
+		return -1;
 
 	}
 	return 0;
@@ -111,7 +112,7 @@ otl_connect* otlPool::get_connect()
 	}
 	//otl_unlock()
 
-	//Èç¹ûÃ»ÓĞ¿ÉÓÃµÄÁ¬½Ó£¬ÉêÇëÒ»¸öÁ¬½Ó
+	//å¦‚æœæ²¡æœ‰å¯ç”¨çš„è¿æ¥ï¼Œç”³è¯·ä¸€ä¸ªè¿æ¥
 	if(pconn == NULL &&  ((int)p_con_list->size() < max_con_count))
 	{
 		try
@@ -123,7 +124,7 @@ otl_connect* otlPool::get_connect()
 				otl_unlock();
 				return NULL;
 			}
-			pconn->rlogon(this->conn_str.c_str());
+			pconn->rlogon(this->conn_str.c_str(),1);
 
 		}
 		catch(otl_exception& e)
@@ -207,7 +208,7 @@ int otlPool::otl_malloc_conn()
 					otl_unlock();
 					return -1;
 				}
-				pcon->rlogon(this->conn_str.c_str());
+				pcon->rlogon(this->conn_str.c_str(),1); //è‡ªåŠ¨æäº¤
 
 			
 			}
@@ -288,12 +289,12 @@ void otlPool::otl_thread_fun(void* arg)
 void otlPool::otl_refresh_pool(void * pParam)
 {
 //	printf("begin refresh_pool\n");
-	static time_t refresh_time = time(NULL); //¼ÇÂ¼¿ªÊ¼µÄÊ±¼ä
+	static time_t refresh_time = time(NULL); //è®°å½•å¼€å§‹çš„æ—¶é—´
 	static time_t print_time = time(NULL);
 	otlPool * pool = static_cast<otlPool*>(pParam);
 	int use;
 	otl_connect* pconn = NULL;
-	if(time(NULL) - refresh_time  >= REFRESH_INTER_SENCOND ) //Ë¢ĞÂ
+	if(time(NULL) - refresh_time  >= REFRESH_INTER_SENCOND ) //åˆ·æ–°
 	{
 		
 		refresh_time = time(NULL);
@@ -309,7 +310,7 @@ void otlPool::otl_refresh_pool(void * pParam)
 
 			if(use == 0)
 			{
-				if(!pool->otl_check_conn(pconn)) //Á¬½Ó²»¿ÉÓÃ
+				if(!pool->otl_check_conn(pconn)) //è¿æ¥ä¸å¯ç”¨
 				{
 					pool->p_con_list->erase(pconn);
 					delete pconn;
@@ -327,7 +328,7 @@ void otlPool::otl_refresh_pool(void * pParam)
 		return;
 
 	}
-	//´òÓ¡µ±Ç°Á¬½Ó³ØµÄÊ¹ÓÃÇé¿ö
+	//æ‰“å°å½“å‰è¿æ¥æ± çš„ä½¿ç”¨æƒ…å†µ
 	if(time(NULL) - print_time >= PRINT_POOL_TIME)
 	{
 
@@ -355,7 +356,7 @@ void otlPool::otl_refresh_pool(void * pParam)
 		return ;
 
 	}
-	//Î¬»¤Á¬½Ó³ØµÄ´óĞ¡£¬
+	//ç»´æŠ¤è¿æ¥æ± çš„å¤§å°ï¼Œ
 	pool->otl_lock();
 	if(pool->p_con_list->size() < pool->max_con_count)
 	{
@@ -368,7 +369,7 @@ void otlPool::otl_refresh_pool(void * pParam)
 				pool->otl_unlock();
 				return ;
 			}
-			pconn->rlogon(pool->conn_str.c_str());
+			pconn->rlogon(pool->conn_str.c_str(),1);
 
 		}
 		catch(otl_exception& e)
@@ -391,7 +392,7 @@ void otlPool::otl_refresh_pool(void * pParam)
 	}
 	pool->otl_unlock();
 
-	//Î¬»¤Á¬½Ó³ØµÄ´óĞ¡£¬½«×îºóÒ»¸öÃ»ÓÃµÄÁ¬½ÓÈ¥µô
+	//ç»´æŠ¤è¿æ¥æ± çš„å¤§å°ï¼Œå°†æœ€åä¸€ä¸ªæ²¡ç”¨çš„è¿æ¥å»æ‰
 	
 	pool->otl_lock();
 	//printf("begin refresh_pool223232\n");
@@ -412,7 +413,7 @@ void otlPool::otl_refresh_pool(void * pParam)
 	}
 	otl_con_list::iterator next =it;
 	next++;
-	if(next != pool->p_con_list->end() && pool->p_con_list->size() >pool->min_con_count)
+	if(next != pool->p_con_list->end() && pool->p_con_list->size() >pool->max_con_count)
 	{
 		pconn = (*next).first;
 		if((*next).second == 0)

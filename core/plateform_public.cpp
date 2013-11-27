@@ -1,6 +1,6 @@
 #include "platform_config.h"
 
-
+/*
 // 将一个Double型转换为string型
 string DoubleToString(double n)
 {
@@ -20,7 +20,7 @@ string IntToString(int n)
 	is << n;
 	is >> s;
 	return s;
-}
+}*/
 #if defined (OS_LINUX)
 int gb2312_to_utf8(char *in, char *out, size_t size) 
 {
