@@ -113,7 +113,7 @@ otl_connect* otlPool::get_connect()
 	//otl_unlock()
 
 	//如果没有可用的连接，申请一个连接
-	if(pconn == NULL &&  ((int)p_con_list->size() < max_con_count))
+	if(pconn == NULL &&  (p_con_list->size() < max_con_count))
 	{
 		try
 		{
@@ -237,7 +237,7 @@ int otlPool::otl_malloc_conn()
 
 bool otlPool::otl_check_conn(otl_connect* pconn)
 {
-	bool check = false;
+	
 	int ret = -1;
 	try
 	{
@@ -266,7 +266,7 @@ void otlPool::otl_thread_fun(void* arg)
 {
 	otlPool* p_pool = static_cast<otlPool*>(arg);
 	assert(p_pool);
-	int i=0;
+
 	cout<<"otl_thread_fun begin"<<endl;
 	while (p_pool->b_startup == true)
 	{
@@ -300,7 +300,7 @@ void otlPool::otl_refresh_pool(void * pParam)
 		refresh_time = time(NULL);
 		pool->otl_lock();
 		//printf("otl_refresh_pool lock\n");
-		printf("begin refresh_pool\n");
+		//printf("begin refresh_pool\n");
 		otl_con_list::iterator it = pool->p_con_list->begin();
 		while (it != pool->p_con_list->end())
 		{
@@ -324,7 +324,7 @@ void otlPool::otl_refresh_pool(void * pParam)
 		}
 		pool->otl_unlock();
 		//printf("otl_refresh_pool unlock\n");
-		printf("end refresh_pool\n");
+		//printf("end refresh_pool\n");
 		return;
 
 	}

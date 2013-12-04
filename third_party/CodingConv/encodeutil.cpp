@@ -1,4 +1,6 @@
 #include"encodeutil.h"
+#include<stdlib.h>
+
 namespace encodeConv
 {
 

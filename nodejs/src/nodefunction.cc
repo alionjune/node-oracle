@@ -1,4 +1,4 @@
-﻿#include"NodeFunction.h"
+#include"nodefunction.h"
 
 
 namespace NodeFunc

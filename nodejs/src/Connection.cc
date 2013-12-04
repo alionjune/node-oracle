@@ -1,227 +1,458 @@
-
 #include "Connection.h"
-#include "QueryJob.h"
 #include "nodefunction.h"
-#include <uv.h>
-extern uv_mutex_t mutex_t;
-extern unsigned int g_curr_thread_count;
-Persistent<FunctionTemplate> Connection::constructorTemplate;
+#include "../../core/platform_config.h"
+#include "QueryJob.h"
+#include "../../core/otlv4.h"
+Persistent<FunctionTemplate>Connection:: constructorTemplate;
+Connection::Connection()
+{
+	pConn = NULL;
+}
 
-void Connection::Init(Handle<Object> target) 
+Connection::~Connection()
+{
+	if(pConn)
+	{
+		delete pConn;
+		pConn = NULL;
+	}
+}
+
+void Connection::Init(Handle<Object>target)
 {
 	HandleScope scope;
-	Local<FunctionTemplate> t = FunctionTemplate::New(New);
-	constructorTemplate = Persistent<FunctionTemplate>::New(t);
+	Local<FunctionTemplate> l = FunctionTemplate::New(New);
+	constructorTemplate = Persistent<FunctionTemplate>::New(l);
 	constructorTemplate->InstanceTemplate()->SetInternalFieldCount(1);
 	constructorTemplate->SetClassName(String::NewSymbol("Connection"));
-
-	/*NODE_SET_PROTOTYPE_METHOD(constructorTemplate, "execute", Execute);
-	NODE_SET_PROTOTYPE_METHOD(constructorTemplate, "close", Close);
-	NODE_SET_PROTOTYPE_METHOD(constructorTemplate, "isConnected", IsConnected);
-	NODE_SET_PROTOTYPE_METHOD(constructorTemplate, "setAutoCommit", SetAutoCommit);
-	NODE_SET_PROTOTYPE_METHOD(constructorTemplate, "commit", Commit);
-	NODE_SET_PROTOTYPE_METHOD(constructorTemplate, "rollback", Rollback);*/
-	NODE_SET_PROTOTYPE_METHOD(constructorTemplate, "close", Close);
-	NODE_SET_PROTOTYPE_METHOD(constructorTemplate, "queryHistory", QueryHistory);
-	NODE_SET_PROTOTYPE_METHOD(constructorTemplate, "queryTempdata", QueryTempdata);
+	NODE_SET_PROTOTYPE_METHOD(constructorTemplate,"execute",Execute);
+	NODE_SET_PROTOTYPE_METHOD(constructorTemplate,"query",Query);
+	NODE_SET_PROTOTYPE_METHOD(constructorTemplate,"beginTran",BeginTran);
+	NODE_SET_PROTOTYPE_METHOD(constructorTemplate,"commit",Commit);
+	NODE_SET_PROTOTYPE_METHOD(constructorTemplate,"rollback",Rollback);
 	target->Set(String::NewSymbol("Connection"), constructorTemplate->GetFunction());
+
+
 }
 
 Handle<Value> Connection::New(const Arguments& args)
 {
 	HandleScope scope;
-
-	Connection *connection = new Connection();
-	connection->Wrap(args.This());
+	Connection* pconn = new Connection();
+	pconn->Wrap(args.This());
 	return args.This();
+
 }
 
-Connection::Connection() 
+void Connection::setConnection(otl_connect* pconn)
 {
+	this->pConn = pconn;
 }
-
-Connection::~Connection() 
+otl_connect* Connection::getConnection()
 {
-	closeConnection();
+	return pConn;
 }
-
-//历史数据
-Handle<Value>Connection::QueryHistory(const Arguments& args)
-{   
-	HandleScope scope;
-	Connection* pConnection = ObjectWrap::Unwrap<Connection>(args.This());
-	string sql = NodeFunc::MergeSql(args);
-	//cout<<"ÊÕµœµÄsqlÓïŸä:"<<sql<<std::endl;
-	QueryJob* query_job = new QueryJob();
-	query_job->sql = sql;
-	query_job->js_obj = Persistent<Object>::New(args[args.Length()-1]->ToObject());
-	query_job->pConn = pConnection->m_connection;
-
-	//×¢²á»Øµ÷º¯Êý
-	uv_async_init(uv_default_loop(),&query_job->main_async,query_asyn_thread_callback);
-	//ŽŽœšÏß³Ì
-	uv_thread_create(&query_job->worker_thread,query_asyn_thread_work_histroy,query_job);
-	return scope.Close(Undefined());
-
-
-}
-void Connection::query_asyn_thread_work_histroy(void* arg)
-{
-	QueryJob* query_job = static_cast<QueryJob*>(arg);
-	//uv_sem_wait(&sem);
-	query_job->queryHistoryTricks(query_job);
-	//uv_sem_post(&sem);
-	query_job->main_async.data = query_job;
-	uv_async_send(&query_job->main_async);
-
-}
-
-Handle<Value>Connection::QueryTempdata(const Arguments& args)
-{   
-	HandleScope scope;
-	Connection* pConnection = ObjectWrap::Unwrap<Connection>(args.This());
-	string sql = NodeFunc::MergeSql(args);
-	//cout<<"ÊÕµœµÄsqlÓïŸä:"<<sql<<std::endl;
-	QueryJob* query_job = new QueryJob();
-	query_job->sql = sql;
-	query_job->js_obj = Persistent<Object>::New(args[args.Length()-1]->ToObject());
-	query_job->pConn = pConnection->m_connection;
-
-	//注册回调函数
-	uv_async_init(uv_default_loop(),&query_job->main_async,query_asyn_thread_callback);
-	//创建线程
-	uv_thread_create(&query_job->worker_thread,query_asyn_thread_work_histroy,query_job);
-	return scope.Close(Undefined());
-
-
-}
-void Connection::query_asyn_thread_work_tempdata(void* arg)
-{
-	QueryJob* query_job = static_cast<QueryJob*>(arg);
-	//uv_sem_wait(&sem);
-	//query_job->query(query_job);
-	//uv_sem_post(&sem);
-	query_job->main_async.data = query_job;
-	uv_async_send(&query_job->main_async);
-
-}
-
-void Connection::query_asyn_thread_callback(uv_async_t* req,int status)
+Handle<Value> Connection::Execute(const Arguments& args)
 {
 	HandleScope scope;
-	QueryJob* query_job = static_cast<QueryJob*>(req->data);
-	Local<Value>argv[2];
-	if(query_job->error !="")
+	Connection* pConn = ObjectWrap::Unwrap<Connection>(args.This());
+	string sql =NodeFunc::MergeSql(args);
+	QueryJob* job = new QueryJob();
+	job->str_sql = sql;
+	job->callback = Persistent<Object>::New(args[args.Length()-1]->ToObject());
+	job->pClinet = pConn;
+	job->req.data = job;
+	pConn->Ref();
+	
+	uv_queue_work(uv_default_loop(),&job->req,EIO_Execute,EIO_After_Execute);
+	
+	return Undefined();
+	/*
+	try
 	{
-#ifdef OS_WIN32
-		argv[0] = String::New(encodeConv::CodingConv::ascii2Utf8(query_job->error.c_str()).c_str());
-#else
-		argv[0] = String::New(query_job->error.c_str());
-#endif
+		pConn->pConn->direct_exec("create table zhs(age int)");
+	}
+	catch (otl_exception& e)
+	{
+		cout<<__FILE__<<":"<<"LINE:"<<__LINE__<<" error:"<<e.msg<<endl;
 		
-		argv[1] = *Undefined();
-
+	}
+	catch (std::exception& e)
+	{
+	}*/
+	
+}
+void Connection::EIO_Execute(uv_work_t* req)
+{
+	QueryJob* job = static_cast<QueryJob*>(req->data);
+	try
+	{
+#ifdef OS_LINUX
+		//UTF-8 To GB2312
+		size_t length = job->str_sql.size()+1;
+		char *p_gb2312 = new char[length];
+		memset(p_gb2312,0,length);
+		utf8_to_gb2312(job->str_sql.c_str(),p_gb2312,length);
+		job->pClinet->pConn->direct_exec(p_gb2312);
+		delete [] p_gb2312;
+#endif
+		//job->pClinet->pConn->commit();
+	}
+	catch (otl_exception& e)
+	{
+		cout<<__FILE__<<":"<<"LINE:"<<__LINE__<<" error:"<<e.msg<<endl;
+		job->str_error = (char*)e.msg;
 
 	}
-	else{
-		//vector<map<string,string> >&result = query_job->result;
-		//typedef vector<map<string,string> >::iterator const_it;
-		//Local<Array>array = Array::New(result.size());
-		//int j = 0;
-		//for (const_it it = result.begin();it != result.end();++it)
-		//{
-
-		//	map<string,string>::iterator map_it;
-		//	Local<Object>obj = Object::New();
-		//	for (map_it =it->begin();map_it!= it->end();++map_it)
-		//	{
-		//		//cout<<map_it->first<<":"<<map_it->second<<endl;
-		//		obj->Set(String::NewSymbol(map_it->first.c_str()), 
-		//			String::New(encodeConv::CodingConv::ascii2Utf8(map_it->second.c_str()).c_str()));
-
-		//	}
-		//	array->Set(j,obj);
-		//	j++;
-		//}
-
-
-		argv[0]=*Undefined();
-#ifdef OS_WIN32
-		//cout<<"win 32"<<query_job->result<<endl;
-		argv[1] = String::New(encodeConv::CodingConv::ascii2Utf8(query_job->result.c_str()).c_str());
-#else
-
-		
-		//cout<<query_job->result.c_str()<<endl;
-		int length = strlen(query_job->result.c_str());
-		length = int(length *1.5 ) +1;
-		char* buffer = new char[length];
-		memset(buffer,0,length);
-		int ret = gb2312_to_utf8((char*)query_job->result.c_str(),buffer,length);
-		//if(ret !=0)
-		//{
-				//printf("%s\n",buffer);
-		//}
-		
-		//printf("%s\n",buffer);
-	
-		argv[1] = String::New(buffer);
-		delete []buffer;
-//argv[1] = String::New(encodeConv::CodingConv::ascii2Utf8(query_job->result.c_str()).c_str());
-#endif
-	
+	catch (std::exception& e)
+	{
+		cout<<__FILE__<<":"<<"LINE:"<<__LINE__<<" error:"<<e.what()<<endl;
+		job->str_error = e.what();
 	}
-	query_job->js_obj->CallAsFunction(Object::New(),2,argv);
-	query_job->js_obj.Dispose();
-	uv_close((uv_handle_t*)&query_job->main_async,uv_close_func);
 
+	
+}
+void Connection::EIO_After_Execute(uv_work_t* req, int status)
+{
+	HandleScope scope;
+	QueryJob* job = static_cast<QueryJob*>(req->data);
+	job->pClinet->Unref();
+	Handle<Value>argv[1];
+	if(!job->str_error.empty())
+	{
+		cout<<job->str_error<<endl;
+#ifdef OS_WIN32
+		job->str_error = encodeConv::CodingConv::ascii2Utf8(job->str_error.c_str());
+#endif
+		argv[0] = String::New(job->str_error.c_str());	
+
+	}
+	else
+	{
+		argv[0] = Undefined();
+	}
+	TryCatch tryCatch;
+	job->callback->CallAsFunction(Object::New(),1,argv);
+	if (tryCatch.HasCaught()) 
+	{
+		node::FatalException(tryCatch);
+	}
+	job->callback.Dispose();
+	delete job;
+	job = NULL;
 	scope.Close(Undefined());
 
 }
 
-void Connection::uv_close_func(uv_handle_t* handle)
+Handle<Value> Connection::BeginTran(const Arguments& args)
 {
+	HandleScope scope;
+	Local<Function>cb = Local<Function>::Cast(args[0]);
+	Connection* pConn = ObjectWrap::Unwrap<Connection>(args.This());
+	Local<Value> argv[1];
+	string error;
+
+	try
+	{
+		pConn->pConn->auto_commit_off();//取消自动提交
+		argv[0] = *Undefined();
+	}
+	catch(otl_exception& e)
+	{
+		cout<<__FILE__<<":"<<"LINE:"<<__LINE__<<" error:"<<e.msg<<endl;
+		error =(char*)e.msg;
+		argv[0] = Local<Value>::New(String::New(error.c_str()));
+
+	}
+	//argv[0] = Local<Value>::New(String::New(error.c_str()));
+	cb->Call(Context::GetCurrent()->Global(),1,argv);
+	return scope.Close(Undefined());
+}
+Handle<Value> Connection::Commit(const Arguments& args)
+{
+	HandleScope scope;
+	Local<Function>cb = Local<Function>::Cast(args[0]);
+	Connection* pConn = ObjectWrap::Unwrap<Connection>(args.This());
+	Local<Value> argv[1];
+	string error="";
+
+	try
+	{
+		pConn->pConn->commit();
+		cout<<"commit"<<endl;
+		pConn->pConn->auto_commit_on();//回复自动提交
+		argv[0] = *Undefined();
+	}
+	catch(otl_exception& e)
+	{
+		cout<<__FILE__<<":"<<"LINE:"<<__LINE__<<" error:"<<e.msg<<endl;
+		error =(char*)e.msg;
+		argv[0] = Local<Value>::New(String::New(error.c_str()));
+
+	}
 	
-	QueryJob* job_ptr= (QueryJob *)handle->data;
-	delete job_ptr;
-	job_ptr = NULL;
-
-};
-
-Handle<Value> Connection::Close(const Arguments& args) 
+	cb->Call(Context::GetCurrent()->Global(),1,argv);
+	
+	return scope.Close(Undefined());
+}
+Handle<Value> Connection::Rollback(const Arguments& args)
 {
-	try 
-	{
-		Connection* connection = ObjectWrap::Unwrap<Connection>(args.This());
-		connection->closeConnection();
+	HandleScope scope;
+	Local<Function>cb = Local<Function>::Cast(args[0]);
+	Connection* pConn = ObjectWrap::Unwrap<Connection>(args.This());
+	Local<Value> argv[1];
+	string error;
 
-		return Undefined();
-	} 
-	catch (const std::exception& ex) 
+	try
 	{
-		printf("Exception: %s\n", ex.what());
-		return Undefined();
+		pConn->pConn->rollback();//
+		pConn->pConn->auto_commit_on();//回复自动提交
+		argv[0] = *Undefined();
 	}
+	catch(otl_exception& e)
+	{
+		cout<<__FILE__<<":"<<"LINE:"<<__LINE__<<" error:"<<e.msg<<endl;
+		error =(char*)e.msg;
+		argv[0] = Local<Value>::New(String::New(error.c_str()));
+
+	}
+	cb->Call(Context::GetCurrent()->Global(),1,argv);
+	return scope.Close(Undefined());
 }
 
-void Connection::setConnection(COTLConn* connection) 
-{
 
-	m_connection = connection;
+Handle<Value>Connection::Query(const Arguments& args)
+{
+	HandleScope scope;
+	Connection* pConn = ObjectWrap::Unwrap<Connection>(args.This());
+	string sql =NodeFunc::MergeSql(args);
+	QueryJob* job = new QueryJob();
+	job->str_sql = sql;
+	job->callback = Persistent<Object>::New(args[args.Length()-1]->ToObject());
+	job->pClinet = pConn;
+	job->req.data = job;
+	pConn->Ref();
+	uv_queue_work(uv_default_loop(),&job->req,EIO_Query,EIO_After_Query);
+	return scope.Close(Undefined());
 }
 
-
-void Connection::closeConnection() 
+void Connection::EIO_Query(uv_work_t* req)
 {
 
-	uv_mutex_lock(&mutex_t);
-	if( m_connection) 
+	QueryJob* job = static_cast<QueryJob*>(req->data);
+	otl_column_desc *desc;
+	int field_count = 0;
+	unsigned int count=0;
+	string str;
+	int ivalue;
+	double dvalue=0.0f;
+	char *pstr = NULL;
+	double *pdouble = NULL;
+	int *pint = NULL;
+	
+	try
 	{
-		m_connection->OTLDisconnect();
-		delete m_connection;
-		m_connection = NULL;
-		g_curr_thread_count--;
-	}
-	uv_mutex_unlock(&mutex_t);
+		//cout<<job->str_sql.c_str()<<endl;
+		#ifdef OS_LINUX
+		//UTF-8 To GB2312
+		size_t length = job->str_sql.size()+1;
+		char *p_gb2312 = new char[length];
+		memset(p_gb2312,0,length);
+		utf8_to_gb2312(job->str_sql.c_str(),p_gb2312,length);
+		otl_stream ostr (10000,p_gb2312, *job->pClinet->pConn);
+		delete [] p_gb2312;
+		#else
+		
+		#endif
+		//otl_stream ostr (10000,job->str_sql.c_str(), *job->pClinet->pConn);
+		//otl_connect db;
+		//otl_connect::otl_initialize(1); //线程模型
+		//db.rlogon("scott/zhs@127.0.0.1:1522/lbs");
+		
+		
+		desc = ostr.describe_select(field_count);
+		cout<<"field_count:"<<field_count<<endl;
+		/*获取列的属性*/
+		for (int i=0; i < field_count;++i)
+		{
+			//desc[i].name_len_
+			column_t columm;
+			if(desc[i].dbtype == SQLT_CHR || desc[i].dbtype == SQLT_VCS || desc[i].dbtype == SQLT_AFC )
+			{
+				columm.type =VALUE_TYPE_STRING;
+			}
+			else if(desc[i].dbtype == SQLT_NUM && desc[i].scale >0)
+			{
+					columm.type =VALUE_TYPE_DOUBLE;
+			}
+			else if((desc[i].dbtype == SQLT_NUM && desc[i].scale <=0) || desc[i].dbtype ==SQLT_INT || desc[i].dbtype ==SQLT_LNG || desc[i].dbtype ==SQLT_UIN )
+			{
+				columm.type = VALUE_TYPE_INT;
+			}
+			columm.column_name = desc[i].name;
+			job->columns.push_back(columm);
+			cout<<columm.column_name<<endl;
+			cout<<desc[i].dbtype<<endl;
+			
+		}
+		while (!ostr.eof())
+		{
+			//row_t t;
+			//cout<<"1111"<<endl;
+			count++;
+			row_t row;
+				for (int i=0; i < field_count;++i)
+				{
+					
+					switch (desc[i].dbtype)
+					{
+					case SQLT_CHR:  //VARCHAR2
+					case SQLT_VCS:  //VARCHAR
+					case SQLT_AFC: //CHAR
+					 ostr >> str;
+					// output_t.rows.
+					 pstr = new char[desc[i].dbsize+1];
+					 memset(pstr,0,sizeof(desc[i].dbsize+1));
+					 memcpy(pstr,str.c_str(),str.length());
+					 row.values.push_back(pstr);
+					// cout<<pstr<<endl;
+					 
+					 break;
+					case SQLT_NUM:  //DOUBLE
+						if(desc[i].scale >0)
+						{
+							ostr >> dvalue;
+							pdouble = new double;
+							*pdouble = dvalue;
+							 row.values.push_back(pdouble);
+						}
+						else
+						{
+							ostr >> ivalue;
+							pint = new int;
+							*pint = ivalue;
+							row.values.push_back(pint);
+							cout<<*pint<<"pint"<<endl;
+						}
 
+						break;
+					case SQLT_INT: //INTEGER
+					case SQLT_LNG: //LONG
+					case SQLT_UIN: //UNSIGNED INT
+						ostr >> ivalue;
+						
+						 pint = new int;
+						*pint = ivalue;
+						 row.values.push_back(pint);
+						 //cout<<*pint<<"int"<<endl;
+						break;
+						
+					default:
+						break;
+					}
+						
+				}
+
+				job->rows.push_back(row);
+
+		}
+		cout<<count<<endl;
+
+	}
+	catch(otl_exception& e)
+	{
+		cout<<__FILE__<<":"<<"LINE:"<<__LINE__<<" error:"<<e.msg<<endl;
+		job->str_error =(char*)e.msg;
+
+	}
+
+
+
+
+}
+void Connection::EIO_After_Query(uv_work_t* req, int status)
+{
+	HandleScope scope;
+	QueryJob* job = static_cast<QueryJob*>(req->data);
+	job->pClinet->Unref();
+	Handle<Value>argv[2];
+	if(!job->str_error.empty())
+	{
+		cout<<job->str_error<<endl;
+#ifdef OS_WIN32
+		job->str_error = encodeConv::CodingConv::ascii2Utf8(job->str_error.c_str());
+#endif
+		argv[0] = String::New(job->str_error.c_str());
+		argv[1] = Undefined();
+
+	}
+	else
+	{
+		argv[0] = Undefined();
+		size_t totalRows = job->rows.size();
+		Local<Array> retRows = Array::New(totalRows);
+		vector<row_t>::iterator it = job->rows.begin();
+		int index=0;
+		char* pstr = NULL;
+		double* pdouble = NULL;
+		int* pint = NULL;
+		int length=0;
+		char* buffer=NULL;
+		for (it; it!= job->rows.end();++it,index++)
+		{
+			 Local<Object> obj= Object::New();
+			for (unsigned i=0; i < job->columns.size();i++)
+			{
+				column_t columm = job->columns.at(i);
+				switch (columm.type)
+				{
+				case VALUE_TYPE_STRING:
+				
+				#ifdef OS_LINUX
+						pstr =(char*)it->values.at(i);
+						cout<<pstr<<endl;
+						length = strlen(pstr)*1.5 +1;
+						buffer = new char[length];
+						memset(buffer,0,length);
+						gb2312_to_utf8(pstr,buffer,length);
+						obj->Set(String::New(columm.column_name.c_str()),String::New(buffer));
+					delete []pstr;
+					delete []buffer;
+				#endif
+					
+					break;
+				case VALUE_TYPE_INT:
+					pint = (int*)it->values.at(i);
+					obj->Set(String::New(columm.column_name.c_str()),Integer::New(*pint));
+					delete pint;
+
+					break;
+				case  VALUE_TYPE_DOUBLE:
+					pdouble = (double*)it->values.at(i);
+					//cout<<"double:"<<*pdouble<<endl;
+					obj->Set(String::New(columm.column_name.c_str()),Number::New(*pdouble));
+					delete pdouble;
+					break;
+					
+				default:
+					cout << "Unhandled type: " << columm.type<<endl;;
+			
+					break;
+				}
+			}
+			   retRows->Set(index, obj);
+		}
+		argv[1]=retRows;
+	}
+
+	TryCatch tryCatch;
+	job->callback->CallAsFunction(Object::New(),2,argv);
+	if (tryCatch.HasCaught()) 
+	{
+		node::FatalException(tryCatch);
+	}
+	job->callback.Dispose();
+	delete job;
+	job = NULL;
+	scope.Close(Undefined());
 }

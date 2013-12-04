@@ -1,32 +1,43 @@
-#ifndef _CONN_JOB_
-#define  _CONN_JOB_
-#include "../../core/OTLConn.h"
-#include "oracle_bindings.h"
-#include <node.h>
+#ifndef _CONN_JOB_H_
+#define _CONN_JOB_H_
+
+#include "../../core/platform_config.h"
+
 #include <v8.h>
+#include <node.h>
 using namespace v8;
-class ConnJob
+
+class otl_connect;
+class ConnctionPool;
+class Conn_Job
 {
 public:
-	ConnJob(void)
-	{
-		pClient = NULL;
-		//error = NULL;
-		pConnect = NULL;
-	}
-	~ConnJob(void){}
-public:
-	string strDblink;
-	string strUserName;
-	string strPwd;
-	Persistent<Object>js_obj;
-	OracleClient* pClient;
-	//const char* error;
-	string error;
-	COTLConn* pConnect;
+	Conn_Job();
+	~Conn_Job();
 
+
+public:
+	string str_dblink;
+	string str_user_name;
+	string str_pass_word;
+	string str_error;
+	ConnctionPool* p_client;
+	otl_connect* p_conn;
 	uv_work_t req;
+	Persistent<Object>callback;
+
+
 
 };
 
+
+
+Conn_Job::Conn_Job()
+{
+	p_client = NULL;
+}
+
+Conn_Job::~Conn_Job()
+{
+}
 #endif

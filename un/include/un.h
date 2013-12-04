@@ -1,4 +1,3 @@
-﻿
 #ifndef _UN_H_
 #define _UN_H_
 #ifdef WIN32
@@ -8,7 +7,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include "un_common.h"
-#include "error.h"
+#include "un_error.h"
 #ifdef WIN32
 #include "un-win.h"
 #elif defined(linux)
@@ -17,8 +16,8 @@
 #if defined (_MSC_VER) && ( _MSC_VER < 1600)
 #include "un_stdint-2008.h"
 #else
-/*#include <stdint.h>*/
-#include "un_stdint-2008.h"
+#include <stdint.h>
+//#include "un_stdint-2008.h"
 #endif
 #ifdef __cplusplus
 extern "C"{

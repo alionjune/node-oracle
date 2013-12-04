@@ -14,7 +14,6 @@
 #include<cstdlib>
 #include<iostream>
 #include<sstream>
-#include <exception>
 using namespace std;
 #include "otlv4.h"
 #include "../third_party/CodingConv/encodeutil.h"
@@ -36,6 +35,7 @@ using namespace std;
 	#define sprintf_s  snprintf
 	#include<iconv.h>
 	int gb2312_to_utf8(char *in, char *out, size_t size);
+	int utf8_to_gb2312(const char* sIn,char* sOut,size_t size);
 
 
 #elif defined OS_WIN32 

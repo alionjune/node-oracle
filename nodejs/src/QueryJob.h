@@ -1,38 +1,76 @@
-#ifndef _QUERY_JOB_H_
-#define _QUERY_JOB_H_
 
-#include <node.h>
+/************************************************************************/
+/*                                                                 */
+/************************************************************************/
+
+#ifndef QUERY_JOB_H_
+#define QUERY_JOB_H_
+#include "../../core/platform_config.h"
+#include "Connection.h"
+#include<node.h>
 #include <v8.h>
 using namespace v8;
-#include "../../core/OTLConn.h"
+using namespace node;
+
+enum 
+{
+	VALUE_TYPE_NULL = 1,
+	VALUE_TYPE_DOUBLE = 2,
+	VALUE_TYPE_STRING = 3,
+	VALUE_TYPE_INT = 4,
+	VALUE_TYPE_DATE = 5,
+	VALUE_TYPE_TIMESTAMP = 6,
+	VALUE_TYPE_CLOB = 7,
+	VALUE_TYPE_BLOB = 8
+};
+/*1列*/
+typedef struct column_t 
+{
+	unsigned int type;
+	string column_name;//名字
+
+}column_t ;
+/*1行*/
+typedef struct row_t 
+{
+	std::vector<void*> values;
+}row_t;
+/*结果集*/
+typedef struct output_t 
+{
+	int type;
+	int index;
+	std::string strVal; 
+	int intVal;
+	double doubleVal;
+	float floatVal;
+	vector<column_t> columns;
+	vector<row_t> rows;
+
+}output_t ;
+
+
 
 
 
 class QueryJob
 {
 public:
-	string sql; //sql�ű�
-	Persistent<Object>js_obj;
-	uv_async_t main_async;
-	uv_work_t work_pool;
-	//uv_loop_t* loop;
-	uv_thread_t worker_thread;
-	//Local<Array> array;
-	//const char* error;//����
-	string error;
-	COTLConn* pConn;
-	string result; //���
-
+	QueryJob();
+	~QueryJob();
 public:
-	//static void query(string sql,OCIConnection* pConn,vector<map<string,string> >&result);
-	static void queryTempdata(QueryJob* query_job);
-	static void queryHistoryTricks(QueryJob* query_job);
+	string str_sql;//sql语句
+	string str_error;//错误
+	uv_work_t req;
+	Persistent<Object>callback;//JS回调函数
+	Connection* pClinet;//
+	//vector<output_t> outputs; //oracle返回的数据
+	vector<column_t> columns;//列
+	vector<row_t> rows;//行数
 
 
-	QueryJob(){pConn = NULL;}
-	~QueryJob(){};
-
+private:
 
 };
-#endif
 
+#endif

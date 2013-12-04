@@ -1,42 +1,42 @@
-#ifndef _CONNECTION_H_
-#define  _CONNECTION_H_
+
+
+//数据库的一个连接对象
+
+#ifndef CONNNECTION_H_
+#define CONNNECTION_H_
 #include <v8.h>
 #include <node.h>
 using namespace node;
 using namespace v8;
-#include "../../core/OTLConn.h"
+#include "../../core/otlPool.h"
 
-//#include "../../third_party/CodingConv/encodeutil.h"
-
-class Connection : public ObjectWrap
+class Connection :public ObjectWrap
 {
 public:
-	//typedef tuple< Connection*,string,string,Persistent<Function>,Local<Array>   > BUNDLE;   //���ݲ��������ݽṹ 
-public:
-	static void Init(Handle<Object> target);
+	static void Init(Handle<Object>target);
 	static Handle<Value> New(const Arguments& args);
-	static Persistent<FunctionTemplate> constructorTemplate;
-	static Handle<Value> Close(const Arguments& args);
-	static Handle<Value> QueryTempdata(const Arguments& args);
-	static Handle<Value> QueryHistory(const Arguments& args);
-
-	//static void EIO_Query(uv_work_t* req);
-	//static void EIO_AfterQuery(uv_work_t* req);
-
-	void closeConnection();
+	static Handle<Value> Query(const Arguments& args);
+	static Handle<Value> Execute(const Arguments& args);
+	static Handle<Value> BeginTran(const Arguments& args);
+	static Handle<Value> Commit(const Arguments& args);
+	static Handle<Value> Rollback(const Arguments& args);
 	Connection();
 	~Connection();
-	void setConnection(COTLConn*connection);
+	void setConnection(otl_connect* pconn);
+	otl_connect*  getConnection();
 private:
-	COTLConn* m_connection;
+	otl_connect* pConn;
+public:
+	static Persistent<FunctionTemplate> constructorTemplate;
+
 
 private:
-	static void query_asyn_thread_work_tempdata(void* arg);
-	static void query_asyn_thread_work_histroy(void* arg);
-	static void query_asyn_thread_callback(uv_async_t* req,int status);
+	static void EIO_Execute(uv_work_t* req);
+	static void EIO_After_Execute(uv_work_t* req, int status); //回调函数
+	static void EIO_Query(uv_work_t* req);//查询
+	static void EIO_After_Query(uv_work_t* req, int status); //回调函数 
 
-	static void uv_close_func(uv_handle_t* handle);
-	
 };
+
 
 #endif

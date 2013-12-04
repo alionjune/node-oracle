@@ -2,6 +2,9 @@
 #define _UN_LINUX_H_
 #include<pthread.h>
 #include<semaphore.h>
+#include<errno.h>
+#include <unistd.h>
+
 typedef pthread_t un_thread_t;
 typedef pthread_mutex_t un_mutex_t;
 typedef pthread_rwlock_t un_rwlock_t;

@@ -1,5 +1,9 @@
-ï»¿#ifndef _NODE_FUNCTION_H_
+#ifndef _NODE_FUNCTION_H_
 #define _NODE_FUNCTION_H_
+
+/************************************************************************/
+/* Ò»Ð©nodejsÓÃµ½µÄ¹«¹²º¯Êý                                             */
+/************************************************************************/
 #include<node.h>
 #include<v8.h>
 using namespace v8;
