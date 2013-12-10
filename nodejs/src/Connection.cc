@@ -67,19 +67,6 @@ Handle<Value> Connection::Execute(const Arguments& args)
 	uv_queue_work(uv_default_loop(),&job->req,EIO_Execute,EIO_After_Execute);
 	
 	return Undefined();
-	/*
-	try
-	{
-		pConn->pConn->direct_exec("create table zhs(age int)");
-	}
-	catch (otl_exception& e)
-	{
-		cout<<__FILE__<<":"<<"LINE:"<<__LINE__<<" error:"<<e.msg<<endl;
-		
-	}
-	catch (std::exception& e)
-	{
-	}*/
 	
 }
 void Connection::EIO_Execute(uv_work_t* req)
@@ -95,6 +82,8 @@ void Connection::EIO_Execute(uv_work_t* req)
 		utf8_to_gb2312(job->str_sql.c_str(),p_gb2312,length);
 		job->pClinet->pConn->direct_exec(p_gb2312);
 		delete [] p_gb2312;
+#else
+		job->pClinet->pConn->direct_exec(job->str_sql.c_str());
 #endif
 		//job->pClinet->pConn->commit();
 	}
@@ -240,6 +229,7 @@ void Connection::EIO_Query(uv_work_t* req)
 {
 
 	QueryJob* job = static_cast<QueryJob*>(req->data);
+
 	otl_column_desc *desc;
 	int field_count = 0;
 	unsigned int count=0;
@@ -262,7 +252,7 @@ void Connection::EIO_Query(uv_work_t* req)
 		otl_stream ostr (10000,p_gb2312, *job->pClinet->pConn);
 		delete [] p_gb2312;
 		#else
-		
+			otl_stream ostr (10000,job->str_sql.c_str(), *job->pClinet->pConn);
 		#endif
 		//otl_stream ostr (10000,job->str_sql.c_str(), *job->pClinet->pConn);
 		//otl_connect db;
@@ -272,8 +262,9 @@ void Connection::EIO_Query(uv_work_t* req)
 		
 		desc = ostr.describe_select(field_count);
 		cout<<"field_count:"<<field_count<<endl;
-		/*获取列的属性*/
-		for (int i=0; i < field_count;++i)
+	
+		int i=0;
+		for (i=0; i < field_count;++i)
 		{
 			//desc[i].name_len_
 			column_t columm;
@@ -398,7 +389,7 @@ void Connection::EIO_After_Query(uv_work_t* req, int status)
 		int* pint = NULL;
 		int length=0;
 		char* buffer=NULL;
-		for (it; it!= job->rows.end();++it,index++)
+		for (;it!= job->rows.end();++it,index++)
 		{
 			 Local<Object> obj= Object::New();
 			for (unsigned i=0; i < job->columns.size();i++)
@@ -408,8 +399,9 @@ void Connection::EIO_After_Query(uv_work_t* req, int status)
 				{
 				case VALUE_TYPE_STRING:
 				
-				#ifdef OS_LINUX
+				
 						pstr =(char*)it->values.at(i);
+						#ifdef OS_LINUX
 						cout<<pstr<<endl;
 						length = strlen(pstr)*1.5 +1;
 						buffer = new char[length];
@@ -418,6 +410,8 @@ void Connection::EIO_After_Query(uv_work_t* req, int status)
 						obj->Set(String::New(columm.column_name.c_str()),String::New(buffer));
 					delete []pstr;
 					delete []buffer;
+				#else
+					obj->Set(String::New(columm.column_name.c_str()),String::New(pstr));
 				#endif
 					
 					break;
@@ -429,7 +423,7 @@ void Connection::EIO_After_Query(uv_work_t* req, int status)
 					break;
 				case  VALUE_TYPE_DOUBLE:
 					pdouble = (double*)it->values.at(i);
-					//cout<<"double:"<<*pdouble<<endl;
+		
 					obj->Set(String::New(columm.column_name.c_str()),Number::New(*pdouble));
 					delete pdouble;
 					break;
@@ -456,3 +450,4 @@ void Connection::EIO_After_Query(uv_work_t* req, int status)
 	job = NULL;
 	scope.Close(Undefined());
 }
+

@@ -1,4 +1,4 @@
-
+﻿
 /************************************************************************/
 /*                                                                 */
 /************************************************************************/
@@ -56,8 +56,8 @@ typedef struct output_t
 class QueryJob
 {
 public:
-	QueryJob();
-	~QueryJob();
+	QueryJob(){pClinet = NULL;};
+	~QueryJob(){};
 public:
 	string str_sql;//sql语句
 	string str_error;//错误

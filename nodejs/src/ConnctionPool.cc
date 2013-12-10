@@ -58,19 +58,6 @@ Handle<Value>ConnctionPool::GetConnn(const Arguments& args)
 	uv_queue_work(uv_default_loop(), &job->req, EIO_Get_Connect, (uv_after_work_cb)EIO_AfterConnect);
 
 	return Undefined();
-
-	/*otl_connect *pconn  = pool->p_otl_pool->get_connect();
-	if(pconn == NULL)
-	{
-
-
-	}
-	else
-	{
-
-
-	}*/
-
 }
 
 void ConnctionPool::EIO_Get_Connect(uv_work_t* req)

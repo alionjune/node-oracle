@@ -31,7 +31,8 @@ public:
 	int release_conn(otl_connect* pconn,bool is_delete_conn=false);
 	void otl_destroy();
 	static otlPool* create_conn_pool();
-	
+	std::string get_error()const;
+
 private:
 	void otl_lock();
 	void otl_unlock();
@@ -52,6 +53,7 @@ private:
 	std::string conn_str;
 	un_mutex_t mutex;
 	bool b_startup;//是否启动
+	std::string str_error;
 
 
 };

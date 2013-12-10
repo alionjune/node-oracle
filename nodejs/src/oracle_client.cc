@@ -17,7 +17,7 @@ void OracleClient::Init(Handle<Object> target)
 	s_ct->InstanceTemplate()->SetInternalFieldCount(1); //设定内部储存多少个内部变量
 	s_ct->SetClassName(String::NewSymbol("oracle_client"));
 	//添加函数
-	NODE_SET_PROTOTYPE_METHOD(s_ct,"connect",Connect);
+
 	NODE_SET_PROTOTYPE_METHOD(s_ct,"create_conn_pool",CreateConnPool);
 
 	target->Set(String::NewSymbol("oracle_client"), s_ct->GetFunction());
@@ -65,68 +65,13 @@ Handle<Value>OracleClient::CreateConnPool(const Arguments& args)
 	}
 
 	return scope.Close(argv[0]);
-	
-	
-
-}
-//连接数据库
-Handle<Value>OracleClient::Connect(const Arguments& args)
-{
-	//HandleScope scope;
-	//OracleClient* p_client = ObjectWrap::Unwrap<OracleClient>(args.This());//获取指针
-
-	//string str_dblink = NodeFunc::ToCString(String::Utf8Value(args[0]));
-	//string user_name = NodeFunc::ToCString(String::Utf8Value(args[1]));
-	//string pass_word = NodeFunc::ToCString(String::Utf8Value(args[2]));
-	//Persistent<Object> callback = Persistent<Object>::New(args[args.Length()-1]->ToObject()); //JS回调函数
-
-	//cout<<str_dblink<<""<<user_name<<"/"<<pass_word<<endl;
-	//Conn_Job* p_conn_job = new Conn_Job();
-	//p_conn_job->str_dblink = str_dblink;
-	//p_conn_job->str_user_name = user_name;
-	//p_conn_job->str_pass_word = pass_word;
-	//p_conn_job->p_client = p_client;
-	//p_conn_job->callback = callback;
-	//p_conn_job->req.data = p_conn_job;
-	//p_client->Ref(); //增加引用计数器
-	//uv_queue_work(uv_default_loop(),&p_conn_job->req,EIO_Connect,EIO_AfterConnect);
 
 
-
-	
-
-	return Undefined();
-
-}
-//连接数据库线程
-void OracleClient::EIO_Connect(uv_work_t* req)
-{
-	//Conn_Job* p_conn_job = static_cast<Conn_Job*>(req->data);
-	//try
-	//{
-	//	otl_connect* p_oracle_conn = otlPool::get_connect();
-	//}
-	//catch (const char* e)
-	//{
-
-	//}
-	//catch (exception &e)
-	//{
-	//}
-	//catch (...)
-	//{
-	//}
-	//
 
 }
 
-//线程执行完毕，执行该函数
-void OracleClient::EIO_AfterConnect(uv_work_t* req, int status)
-{
-	//Conn_Job* p_conn_job = static_cast<Conn_Job*>(req->data);
-	//p_conn_job->p_client->Unref();//引用计数器-1
 
-}
+
 extern "C" 
 {
 	static void init(Handle<Object> target)
@@ -134,7 +79,7 @@ extern "C"
 		OracleClient::Init(target);
 		ConnctionPool::Init(target);
 		Connection::Init(target);
-	
+
 	}
 
 	NODE_MODULE(oracle_client, init);

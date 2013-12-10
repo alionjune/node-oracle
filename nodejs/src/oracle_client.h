@@ -12,11 +12,11 @@ class OracleClient : public ObjectWrap
 public:
 	static void Init(Handle<Object> target);
 	static Handle<Value> New(const Arguments& args);
-	static Handle<Value> Connect(const Arguments& args);
+	/*static Handle<Value> Connect(const Arguments& args);*/
 	static Handle<Value> CreateConnPool(const Arguments& args);//创建数据库连接池
-private:
-	static void EIO_Connect(uv_work_t* req);
-	static void EIO_AfterConnect(uv_work_t* req, int status); //回调函数
+// private:
+// 	static void EIO_Connect(uv_work_t* req);
+// 	static void EIO_AfterConnect(uv_work_t* req, int status); //回调函数
 public:
 	OracleClient();
 	~OracleClient();

@@ -1,8 +1,5 @@
 
 #include "otlPool.h"
-
-
-
 #include <iostream>
 using namespace std;
 unsigned int otlPool::total_con_cout = 0;
@@ -24,7 +21,10 @@ otlPool::otlPool(void)
 	otl_connect::otl_initialize(1); //线程模型
 
 }
-
+std::string otlPool::get_error()const
+{
+	return str_error;
+}
 
 otlPool::~otlPool(void)
 {
