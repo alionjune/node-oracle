@@ -1,0 +1,9 @@
+﻿#include"QueryJob.h"
+
+QueryJob::QueryJob()
+{
+}
+
+QueryJob::~QueryJob()
+{
+}

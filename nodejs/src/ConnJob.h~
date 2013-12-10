@@ -1,0 +1,38 @@
+#ifndef _CONN_JOB_H_
+#define _CONN_JOB_H_
+
+#include "../../core/platform_config.h"
+#include "../../core/otlPool.h"
+#include "../../core/otlv4.h"
+#include "oracle_client.h"
+#include <v8.h>
+#include <node.h>
+using namespace v8;
+class Conn_Job
+{
+public:
+	Conn_Job();
+	~Conn_Job();
+
+
+public:
+	string str_dblink;
+	string str_user_name;
+	string str_pass_word;
+	string str_error;
+	OracleClient* p_client;
+	otl_connect* p_conn;
+
+
+
+};
+
+Conn_Job::Conn_Job()
+{
+	p_client = NULL;
+}
+
+Conn_Job::~Conn_Job()
+{
+}
+#endif
