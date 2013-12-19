@@ -27,8 +27,8 @@ void ConnctionPool::Init(Handle<Object> target)
 	p_otl_pool = otlPool::create_conn_pool();
 	constructorTemplate->InstanceTemplate()->SetInternalFieldCount(1);
 	constructorTemplate->SetClassName(String::NewSymbol("conn_pool"));
-	NODE_SET_PROTOTYPE_METHOD(constructorTemplate,"acquire",GetConnn);
-	NODE_SET_PROTOTYPE_METHOD(constructorTemplate,"release",ReleaseConn);
+	NODE_SET_PROTOTYPE_METHOD(constructorTemplate,"acquire_",GetConnn);
+	NODE_SET_PROTOTYPE_METHOD(constructorTemplate,"release_",ReleaseConn);
 	target->Set(String::NewSymbol("conn_pool"), constructorTemplate->GetFunction());
 
 
@@ -67,8 +67,9 @@ void ConnctionPool::EIO_Get_Connect(uv_work_t* req)
 	otl_connect* pconn = job->p_client->p_otl_pool->get_connect();
 	if(pconn == NULL)
 	{
-		cout<<"get conn fail"<<endl;
-		job->str_error="get conn fail";
+		//cout<<"get conn fail"<<endl;
+		job->str_error= job->p_client->p_otl_pool->get_error();
+		job->p_conn = NULL;
 	}
 	else
 	{
@@ -88,6 +89,7 @@ void ConnctionPool::EIO_AfterConnect(uv_work_t* req, int status)
 	job->p_client->Unref();
 	if(!job->str_error.empty())
 	{
+	
 #ifdef OS_WIN32
 		job->str_error = encodeConv::CodingConv::ascii2Utf8(job->str_error.c_str());
 #endif

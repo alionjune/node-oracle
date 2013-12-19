@@ -8,7 +8,6 @@
 #include "../../core/platform_config.h"
 #include "Connection.h"
 #include<node.h>
-#include <v8.h>
 using namespace v8;
 using namespace node;
 

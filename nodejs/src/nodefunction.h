@@ -5,7 +5,6 @@
 /* 一些nodejs用到的公共函数                                             */
 /************************************************************************/
 #include<node.h>
-#include<v8.h>
 using namespace v8;
 using namespace node;
 #include"../../core/platform_config.h"

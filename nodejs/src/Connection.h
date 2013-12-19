@@ -1,10 +1,5 @@
-
-
-//数据库的一个连接对象
-
 #ifndef CONNNECTION_H_
 #define CONNNECTION_H_
-#include <v8.h>
 #include <node.h>
 using namespace node;
 using namespace v8;

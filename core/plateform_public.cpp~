@@ -56,7 +56,6 @@ int utf8_to_gb2312(const char* sIn,char* sOut,size_t size)
 
 	char *pIn = (char *)sIn;
 	char *pOut = sOut;
-
 	iconv_t cd;
 	cd = iconv_open("GB2312//IGNORE", "UTF-8");
 	if (cd == (iconv_t) - 1)

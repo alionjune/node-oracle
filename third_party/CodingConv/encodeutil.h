@@ -4,8 +4,8 @@
 #include<vector>
 #include<cstring>
 using namespace std;
-#ifndef OS_WIN32 
-//#include<iconv.h>
+#ifdef OS_LINUX
+#include<iconv.h>
 #endif
 
 
@@ -30,6 +30,8 @@ namespace encodeConv
 		static int gb2312_to_utf8(char *in, char *out, size_t size);
 #endif
 */
+	//static int gb2312_to_utf8(const char *in, char *out, size_t size);
+	//static int utf8_to_gb2312(const char* sIn,char* sOut,size_t size);
 	private:
 
 		static int enc_unicode_to_utf8_one(unsigned long unic, unsigned char *pOutput,int outSize);

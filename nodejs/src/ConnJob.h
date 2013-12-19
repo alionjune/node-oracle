@@ -2,10 +2,7 @@
 #define _CONN_JOB_H_
 
 #include "../../core/platform_config.h"
-
-#include <v8.h>
 #include <node.h>
-using namespace v8;
 
 class otl_connect;
 class ConnctionPool;

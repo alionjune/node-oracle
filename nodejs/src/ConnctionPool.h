@@ -1,6 +1,5 @@
 #ifndef CONNECTION_POOL_H
 #define CONNECTION_POOL_H
-#include <v8.h>
 #include <node.h>
 using namespace node;
 using namespace v8;

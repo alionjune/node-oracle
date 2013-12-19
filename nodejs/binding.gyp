@@ -11,7 +11,7 @@
 	  ],
       'sources': ['src/oracle_client.cc','src/Connection.cc','../third_party/CodingConv/encodeutil.cpp',
 	 '../core/plateform_public.cpp','src/nodefunction.cc','../core/otlPool.cpp','src/ConnctionPool.cc',
-	 	'../un/src/win32/thread.c','../un/src/win32/winapi.c'
+	 	'../un/src/win32/thread.c','../un/src/win32/winapi.c','../un/src/win32/error.c'
 	  ],
              
           },

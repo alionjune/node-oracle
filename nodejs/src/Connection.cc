@@ -25,11 +25,11 @@ void Connection::Init(Handle<Object>target)
 	constructorTemplate = Persistent<FunctionTemplate>::New(l);
 	constructorTemplate->InstanceTemplate()->SetInternalFieldCount(1);
 	constructorTemplate->SetClassName(String::NewSymbol("Connection"));
-	NODE_SET_PROTOTYPE_METHOD(constructorTemplate,"execute",Execute);
-	NODE_SET_PROTOTYPE_METHOD(constructorTemplate,"query",Query);
-	NODE_SET_PROTOTYPE_METHOD(constructorTemplate,"beginTran",BeginTran);
-	NODE_SET_PROTOTYPE_METHOD(constructorTemplate,"commit",Commit);
-	NODE_SET_PROTOTYPE_METHOD(constructorTemplate,"rollback",Rollback);
+	NODE_SET_PROTOTYPE_METHOD(constructorTemplate,"execute_",Execute);
+	NODE_SET_PROTOTYPE_METHOD(constructorTemplate,"query_",Query);
+	NODE_SET_PROTOTYPE_METHOD(constructorTemplate,"beginTran_",BeginTran);
+	NODE_SET_PROTOTYPE_METHOD(constructorTemplate,"commit_",Commit);
+	NODE_SET_PROTOTYPE_METHOD(constructorTemplate,"rollback_",Rollback);
 	target->Set(String::NewSymbol("Connection"), constructorTemplate->GetFunction());
 
 
@@ -168,7 +168,7 @@ Handle<Value> Connection::Commit(const Arguments& args)
 	try
 	{
 		pConn->pConn->commit();
-		cout<<"commit"<<endl;
+		//cout<<"commit"<<endl;
 		pConn->pConn->auto_commit_on();//回复自动提交
 		argv[0] = *Undefined();
 	}
@@ -261,7 +261,7 @@ void Connection::EIO_Query(uv_work_t* req)
 		
 		
 		desc = ostr.describe_select(field_count);
-		cout<<"field_count:"<<field_count<<endl;
+		//cout<<"field_count:"<<field_count<<endl;
 	
 		int i=0;
 		for (i=0; i < field_count;++i)
@@ -282,8 +282,8 @@ void Connection::EIO_Query(uv_work_t* req)
 			}
 			columm.column_name = desc[i].name;
 			job->columns.push_back(columm);
-			cout<<columm.column_name<<endl;
-			cout<<desc[i].dbtype<<endl;
+			//cout<<columm.column_name<<endl;
+			//cout<<desc[i].dbtype<<endl;
 			
 		}
 		while (!ostr.eof())
@@ -323,7 +323,7 @@ void Connection::EIO_Query(uv_work_t* req)
 							pint = new int;
 							*pint = ivalue;
 							row.values.push_back(pint);
-							cout<<*pint<<"pint"<<endl;
+							//cout<<*pint<<"pint"<<endl;
 						}
 
 						break;
@@ -347,7 +347,7 @@ void Connection::EIO_Query(uv_work_t* req)
 				job->rows.push_back(row);
 
 		}
-		cout<<count<<endl;
+		//cout<<count<<endl;
 
 	}
 	catch(otl_exception& e)
@@ -402,7 +402,7 @@ void Connection::EIO_After_Query(uv_work_t* req, int status)
 				
 						pstr =(char*)it->values.at(i);
 						#ifdef OS_LINUX
-						cout<<pstr<<endl;
+						//cout<<pstr<<endl;
 						length = strlen(pstr)*1.5 +1;
 						buffer = new char[length];
 						memset(buffer,0,length);

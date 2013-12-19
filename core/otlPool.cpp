@@ -76,12 +76,14 @@ int otlPool::init_pool(std::string user_name,std::string pwd,std::string tns,uns
 
 	catch (otl_exception& e )
 	{
-		cout<<__FILE__<<":"<<"LINE:"<<__LINE__<<" error:"<<e.msg<<endl;;
+		cout<<__FILE__<<":"<<"LINE:"<<__LINE__<<" error:"<<e.msg<<endl;
+		str_error = (char*)e.msg;
 		return -1;
 	}
 	catch (std::exception&e)
 	{
 		cout<<__FILE__<<":"<<"LINE:"<<__LINE__<<" error:"<<e.what()<<endl;
+		str_error = e.what();
 		return -1;
 
 	}
@@ -115,6 +117,7 @@ otl_connect* otlPool::get_connect()
 	//如果没有可用的连接，申请一个连接
 	if(pconn == NULL &&  (p_con_list->size() < max_con_count))
 	{
+		
 		try
 		{
 			//otl_unlock();
@@ -122,6 +125,7 @@ otl_connect* otlPool::get_connect()
 			if(NULL == pconn)
 			{
 				otl_unlock();
+				str_error = "new otl_connect fail may be not memory";
 				return NULL;
 			}
 			pconn->rlogon(this->conn_str.c_str(),1);
@@ -131,7 +135,8 @@ otl_connect* otlPool::get_connect()
 		{
 			delete pconn;
 			pconn = NULL;
-			cout<<__FILE__<<":"<<__LINE__<<"error:"<<e.msg<<endl;;
+			cout<<__FILE__<<":"<<__LINE__<<"error:"<<e.msg<<endl;
+			str_error = (char*)e.msg;
 
 		}
 		if(pconn )
@@ -146,6 +151,7 @@ otl_connect* otlPool::get_connect()
 
 	}
 		otl_unlock();  //unlock
+		str_error = "pool had empty";
 		return NULL;
 }
 
@@ -179,7 +185,8 @@ int otlPool::release_conn(otl_connect* pconn,bool is_delete_conn)
 		{
 			delete pconn;
 			pconn = NULL;
-			cout<<__FILE__<<":"<<"LINE:"<<__LINE__<<" error:"<<e.msg<<endl;;
+			cout<<__FILE__<<":"<<"LINE:"<<__LINE__<<" error:"<<e.msg<<endl;
+			str_error = (char*)e.msg;
 			otl_unlock();
 			return -1;
 		}
@@ -206,6 +213,7 @@ int otlPool::otl_malloc_conn()
 				if(pcon == NULL)
 				{
 					otl_unlock();
+					str_error = "new otl_connect fail may be not memory";
 					return -1;
 				}
 				pcon->rlogon(this->conn_str.c_str(),1); //自动提交
@@ -217,7 +225,8 @@ int otlPool::otl_malloc_conn()
 				delete pcon;
 				pcon = NULL;
 				this->otl_unlock();
-				cout<<__FILE__<<":"<<__LINE__<<" error:"<<e.msg<<endl;;
+				cout<<__FILE__<<":"<<__LINE__<<" error:"<<e.msg<<endl;
+				str_error = (char*)e.msg;
 				return -1;
 			}
 			
@@ -255,7 +264,8 @@ bool otlPool::otl_check_conn(otl_connect* pconn)
 	
 	catch (otl_exception& e)
 	{
-		cout<<__FILE__<<":"<<"LINE:"<<__LINE__<<" error:"<<e.msg<<endl;;
+		cout<<__FILE__<<":"<<"LINE:"<<__LINE__<<" error:"<<e.msg<<endl;
+		str_error = (char*)e.msg;
 		return false;
 	}
 	return ret == 1 ? true :false;

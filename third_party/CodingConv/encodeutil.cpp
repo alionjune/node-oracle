@@ -157,7 +157,7 @@ wstring CodingConv::Utf82Unicode(const char* pUtf8)
 	bytes = my_utf8_to_unicode(strUnicode_,(unsigned char*)pUtf8,len);
 	assert(bytes !=0 );
 	//strUnicode.resize(bytes>>2);
-	//è¿™é‡Œå–ä¸¤ä¸ªå­—èŠ?
+	//Ã¨Â¿Â™Ã©Â‡ÂŒÃ¥ÂÂ–Ã¤Å¾â‚¬Ã¤Å¾ÂªÃ¥Â­Â—Ã¨ÂŠ?
 	len =strUnicode_.size();
 	unsigned int iValue = 0;
 	//int j=0;
@@ -218,38 +218,7 @@ string CodingConv::utf82Ascii(const char* pAscii)
 	wstring  unicode = Utf82Unicode(pAscii);
 	return ws2s(unicode);
 }
-/*
-//ÓÉÓÚºêÔÚ±àÒëµÄÊ±ºòÈ¥½âÊÍ£¬º¯ÊıÃûµÄËÑË÷ºÍ·ûºÅ±íµÄ½¨Á¢ÊÇÔÚÁ´½Ó½×¶Î£¬
-//ÓÃ#ifdef OS_LINUX »áÕÒ²»µ½¸Ãº¯Êı
-#ifndef OS_WIN32 
 
-int CodingConv::gb2312_to_utf8(char *in, char *out, size_t size) 
-{
 
-         //Ê¹ÓÃiconv×ª»»GB2312ÎªUTF-8±àÂë
 
-        iconv_t cd;
-         cd = iconv_open("UTF-8//IGNORE", "GB2312");  //ÌØÊâ·ûºÅÄÇÃ´¾ÍÌø¹ı´íÎó£¬¶ø²»ÊÇÄ¬ÈÏµÄÍ£ÔÚÄÇÀï¡£
-         if ( cd == (iconv_t)(-1) ) 
-				{
-            	 perror("iconv_open failed");
-            	 return 0;
-         			}
-
-         size_t in_left = strlen(in) + 1;
-         char *out_ptr;
-         size_t res;
-
-         out_ptr = out;
-         res = iconv(cd, &in, &in_left, &out_ptr, &size);
-         if ( res == (size_t) (-1) ) {
-             perror("iconv failed");
-             return 0;
-         }
-
-         iconv_close(cd);
-         return 1;
-     }
-#endif
-*/
 }
