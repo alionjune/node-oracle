@@ -39,12 +39,7 @@ using namespace std;
 
 
 #elif defined OS_WIN32 
-	#if defined NODEJS
-		#pragma comment(lib,"../lib/oci.lib")
-	#else
-		#pragma comment(lib,"../lib/oci.lib")
-	#endif
-
+		#pragma comment(lib,"oci.lib")
 #endif
 
 
