@@ -17,7 +17,7 @@ exports.Pool=function(tns,user_name,pwd, max_conn,min_conn){
 
 
     /**
-     *
+     *获取连接
      * @param callback(err,conn)
      */
     conn_pool.acquire = function(callback){
@@ -36,7 +36,7 @@ exports.Pool=function(tns,user_name,pwd, max_conn,min_conn){
        
     }
     /**
-     *
+     *释放连接
      * @param Conn
      * @private
      */

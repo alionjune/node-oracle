@@ -17,8 +17,9 @@ function to_sql(sql,args){
 	}
 	return sql;
 }
-/**
+/** 
  *  调用形式 query('select * from table where ....',function(err,result){});
+ * 支持的数据类型有 int String Date
  */
 Connection.prototype.query = function(){
 
