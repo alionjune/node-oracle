@@ -239,6 +239,9 @@ void Connection::EIO_Query(uv_work_t* req)
 	char *pstr = NULL;
 	double *pdouble = NULL;
 	int *pint = NULL;
+	otl_datetime dv;
+	stringstream ss;
+	stringstream tmp;
 	
 	try
 	{
@@ -279,6 +282,10 @@ void Connection::EIO_Query(uv_work_t* req)
 			else if((desc[i].dbtype == SQLT_NUM && desc[i].scale <=0) || desc[i].dbtype ==SQLT_INT || desc[i].dbtype ==SQLT_LNG || desc[i].dbtype ==SQLT_UIN )
 			{
 				columm.type = VALUE_TYPE_INT;
+			}
+			else if(desc[i].dbtype == SQLT_DAT)
+			{
+				columm.type = VALUE_TYPE_DATE;
 			}
 			columm.column_name = desc[i].name;
 			job->columns.push_back(columm);
@@ -336,6 +343,24 @@ void Connection::EIO_Query(uv_work_t* req)
 						*pint = ivalue;
 						 row.values.push_back(pint);
 						 //cout<<*pint<<"int"<<endl;
+						break;
+					case SQLT_DAT:
+						ostr >> dv;
+						ss.str("");
+						ss<<dv.year<<"-"<<dv.month<<"-"<<dv.day<<" "<<dv.hour<<":"<<dv.minute<<":"<<dv.second;
+						if(ostr.is_null())
+						{
+							 pstr = new char[1];
+							 pstr[0]='\0';
+						}	
+						else
+						{
+							str = ss.str();
+							pstr = new char[str.size()+1];
+							memset(pstr,0,sizeof(pstr));
+						}
+						memcpy(pstr,str.c_str(),str.length());
+						row.values.push_back(pstr);
 						break;
 						
 					default:
@@ -412,6 +437,7 @@ void Connection::EIO_After_Query(uv_work_t* req, int status)
 					delete []buffer;
 				#else
 					obj->Set(String::New(columm.column_name.c_str()),String::New(pstr));
+					delete []pstr;
 				#endif
 					
 					break;
@@ -427,7 +453,11 @@ void Connection::EIO_After_Query(uv_work_t* req, int status)
 					obj->Set(String::New(columm.column_name.c_str()),Number::New(*pdouble));
 					delete pdouble;
 					break;
-					
+				case VALUE_TYPE_DATE:
+					pstr =(char*)it->values.at(i);
+					obj->Set(String::New(columm.column_name.c_str()),String::New(pstr));
+					delete []pstr;
+					break;
 				default:
 					cout << "Unhandled type: " << columm.type<<endl;;
 			
