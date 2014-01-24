@@ -58,30 +58,18 @@ Handle<Value>ConnctionPool::GetConnn(const Arguments& args)
 	uv_queue_work(uv_default_loop(), &job->req, EIO_Get_Connect, (uv_after_work_cb)EIO_AfterConnect);
 
 	return Undefined();
-
-	/*otl_connect *pconn  = pool->p_otl_pool->get_connect();
-	if(pconn == NULL)
-	{
-
-
-	}
-	else
-	{
-
-
-	}*/
-
 }
 
 void ConnctionPool::EIO_Get_Connect(uv_work_t* req)
 {
-	cout<<"Connect"<<endl;
+	//cout<<"Connect"<<endl;
 	Conn_Job* job = static_cast<Conn_Job*>(req->data);
 	otl_connect* pconn = job->p_client->p_otl_pool->get_connect();
 	if(pconn == NULL)
 	{
-		cout<<"get conn fail"<<endl;
-		job->str_error="get conn fail";
+		//cout<<"get conn fail"<<endl;
+		job->str_error= job->p_client->p_otl_pool->get_error();
+		job->p_conn = NULL;
 	}
 	else
 	{
@@ -94,13 +82,14 @@ void ConnctionPool::EIO_Get_Connect(uv_work_t* req)
 }
 void ConnctionPool::EIO_AfterConnect(uv_work_t* req, int status)
 {
-	cout<<" after Connect"<<endl;
+	//cout<<" after Connect"<<endl;
 	HandleScope scope;
 	Handle<Value> argv[2];
 	Conn_Job* job = static_cast<Conn_Job*>(req->data);
 	job->p_client->Unref();
 	if(!job->str_error.empty())
 	{
+	
 #ifdef OS_WIN32
 		job->str_error = encodeConv::CodingConv::ascii2Utf8(job->str_error.c_str());
 #endif

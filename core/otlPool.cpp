@@ -277,7 +277,7 @@ void otlPool::otl_thread_fun(void* arg)
 	otlPool* p_pool = static_cast<otlPool*>(arg);
 	assert(p_pool);
 
-	cout<<"otl_thread_fun begin"<<endl;
+	//cout<<"otl_thread_fun begin"<<endl;
 	while (p_pool->b_startup == true)
 	{
 		//cout<<i++<<endl;
@@ -293,7 +293,7 @@ void otlPool::otl_thread_fun(void* arg)
 	}
 	p_pool->otl_unlock();
 	un_mutex_destroy(&p_pool->mutex);
-	cout<<"otl_thread_fun end"<<endl;
+	//cout<<"otl_thread_fun end"<<endl;
 	
 }
 void otlPool::otl_refresh_pool(void * pParam)
